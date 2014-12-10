@@ -1,0 +1,19 @@
+<template name='edit'>
+<div>
+  <button id='save-chords'>
+    Save
+  </button>
+</div>
+<div>
+  {{currentBeat}}
+</div>
+<div>
+  {{#each chords}}
+    <span>
+      {{#each noteNumbers}}
+        {{this}}
+      {{/each}}
+    </span> |
+  {{/each}}
+</div>
+</template>
