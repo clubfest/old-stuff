@@ -27,6 +27,7 @@ Editor = {
 
   insertRest: function(){
     this.addRestToCurrentContent();
+    this.incrementCurrentBeat();
   },
   deleteContent: function(){
     var index = this.getCurrentIndex();
@@ -57,6 +58,7 @@ Editor = {
         } else if (evt.which === 39) { // rigt arrow
           self.navigateRight();
         } else if (evt.which === 32) { // space is increment current beat
+          evt.preventDefault();
           self.insertSpace();
         }
       }
@@ -89,7 +91,7 @@ Editor = {
     });
   },
   save: function(){
-    Meteor.call('saveSong', this.getSongId(), this.getSong(), function(){
+    Meteor.call('saveSong', this.getSongId(), this.getSong(), function(err){
       if (err){
         console.log(err.reason);
       }
@@ -132,8 +134,28 @@ Editor = {
   
   addRestToCurrentContent: function(){
     // todo: content.type = 'rest'
+    var index = this.getCurrentIndex();
+    var currentBeat = this.getCurrentBeat();
+    var contents = this.getContents();
+    var content = contents[index];
+    var newContent = {
+      noteNumbers: [],
+      type: 'rest',
+      startBeat: this.getCurrentBeat(),
+    };
+
+    if (!content || !Fraction.equal(content.startBeat, currentBeat)){
+    
+      contents.splice(index, 0, newContent);
+    } else {
+      contents.splice(index, 1, newContent);
+    }
+
+    this.setContents(contents);
   },
   addNoteToCurrentContent: function(noteNumber){
+    if (noteNumber < 21 || noteNumber > 100) return ;
+
     var index = this.getCurrentIndex();
     var currentBeat = this.getCurrentBeat();
     var contents = this.getContents();
@@ -147,12 +169,9 @@ Editor = {
       contents.splice(index, 0, content);
     } else {
       content.noteNumbers.push(noteNumber);
-      // contents.splice(index, 0, content);
     }
 
-    // todo: check if the splice index is correct and whether currentIndex needs to change
     this.setContents(contents);
-    return content;
   },
 
   setIncrementSize: function(arg){

@@ -1,11 +1,12 @@
-
+Template.edit.created = function(){
+  Editor.init(this.data.songId);
+}
 
 Template.edit.destroy = function(){
   Editor.destroy();
 }
 
 Template.edit.rendered = function(){
-  Editor.init(this.data.songId);
 }
 
 Template.edit.helpers({

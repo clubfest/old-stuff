@@ -47,9 +47,9 @@ Metronome = {
       }, i * tempo);
     }
 
-    window.setTimeout(function(){
-      DrumPlayer.play(50);
-    }, (beats - 0.3) * tempo);
+    // window.setTimeout(function(){
+    //   DrumPlayer.play(50);
+    // }, (beats - 0.3) * tempo);
 
     var self = this;
     this.timeout = window.setTimeout(function(){

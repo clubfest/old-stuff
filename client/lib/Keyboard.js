@@ -5,6 +5,13 @@ Keyboard = {
 
   init: function(){
     this.connectKeyToKeyboard();
+    Shortcuts.initKeyboard();
+  },
+
+  destroy: function(){
+    $(window).off('keydown.keyboard');
+    $(window).off('keyup.keyboard');
+    Shortcuts.destroyKeyboard();
   },
 
   connectKeyToKeyboard: function() {
@@ -13,7 +20,7 @@ Keyboard = {
 
     $(window).off('keydown.keyboard');
     $(window).on('keydown.keyboard', function(evt) {
-      if (evt.shiftKey) return ;
+      if (evt.shiftKey || evt.ctrlKey) return ;
 
       var keyCode = fixKeyCode(evt.keyCode);
 
@@ -37,8 +44,6 @@ Keyboard = {
         $(window).trigger('noteDown', {
           noteNumber: noteNumber,
         });
-      } else {
-        self.adjustSettings(keyCode, evt.shiftKey);
       }
     });
 
@@ -52,33 +57,6 @@ Keyboard = {
   adjustShift: function(noteNumber) {
     noteNumber += this.shift;
     return noteNumber;
-  },
-
-  adjustSettings: function(keyCode, shiftKey) {
-    if (keyCode === 39) {
-      if (shiftKey) {
-        this.shift++;
-      } else{
-        this.shift += 12;
-      }
-    } else if (keyCode === 37){
-      if (shiftKey) {
-        this.shift--;
-      } else{
-        this.shift -= 12;
-      }
-    } else if (keyCode === 40) {
-      DrumPlayer.decreaseVolume();
-      PianoPlayer.decreaseVolume();
-    } else if (keyCode === 38) {
-      DrumPlayer.increaseVolume();
-      PianoPlayer.increaseVolume();
-    } else if (keyCode === 32) {
-      DrumPlayer.play(50);
-      $(window).trigger('beatDown', {
-        noteNumber: 50,
-      });
-    }
   },
 }
 
