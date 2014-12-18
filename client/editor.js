@@ -2,8 +2,8 @@ Template.edit.created = function(){
   Editor.init(this.data.songId);
 }
 
-Template.edit.destroy = function(){
-  Editor.destroy();
+Template.edit.destroyed = function(){
+  Editor.destroy();  
 }
 
 Template.edit.rendered = function(){
@@ -19,10 +19,19 @@ Template.edit.helpers({
   chords: function(){
     return Editor.getContents();
   },
+  name: function(){
+    return Editor.getName();
+  },
 });
 
 Template.edit.events({
-  'click #save-chords': function(){
+  'click #save': function(){
     Editor.save();
-  }
+  },
+  'click #set-name': function(){
+    var name = prompt('Title');
+    if (name) {
+      Editor.setName(name);
+    }
+  },
 })

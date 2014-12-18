@@ -8,11 +8,12 @@ SheetDrawer = {
     this.paper = new Raphael($('#sheet')[0], this.width - 2 * this.margin, this.height);
 
     var self = this;
-    Tracker.autorun(function(){
+    this.drawComputation = Tracker.autorun(function(){
       self.draw();
     });
   },
   destroy: function(){
+    this.drawComputation.stop();
     this.paper.remove();
   },
 

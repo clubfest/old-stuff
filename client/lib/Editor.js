@@ -12,9 +12,9 @@ Editor = {
 
   init: function(songId){
     this.setSongId(songId);
-    this.reset();
+    this.reset(Songs.findOne(songId));
     this.handleNoteDown();
-    this.handleKeyDown();
+    Shortcuts.initEditor();
   },
 
   handleNoteDown: function(){
@@ -32,8 +32,13 @@ Editor = {
   deleteContent: function(){
     var index = this.getCurrentIndex();
     var contents = this.getContents();
-    contents.splice(index, 1);
-    this.setContents(contents);
+    var content = contents[index];
+    if (content && Fraction.equal(content.startBeat, this.getCurrentBeat())) {
+      contents.splice(index, 1);
+      this.setContents(contents);
+    } else {
+      this.decrementCurrentBeat();
+    }
   },
   navigateLeft: function(){
     this.decrementCurrentBeat();
@@ -41,45 +46,50 @@ Editor = {
   navigateRight: function(){
     this.incrementCurrentBeat();
   },
-
-  handleKeyDown: function(){
-    var self = this;
-    $(window).off('keydown.Editor');
-    $(window).on('keydown.Editor', function(evt){
-      if (evt.shiftKey) {
-        if (evt.which === 32) { // Shift + space is rest
-          self.insertRest();
-        } else if (evt.which === 8){ // Shift + backspace is delete
-          self.deleteContent();
-        }
+  navigateRightWithSound: function(){
+    var index = this.getCurrentIndex();
+    var contents = this.getContents();
+    var content = contents[index];
+    if (content && Fraction.equal(content.startBeat, this.getCurrentBeat())) {
+      if (content.noteNumbers && content.noteNumbers.length > 0) {
+        content.noteNumbers.forEach(function(noteNumber){
+          PianoPlayer.play(noteNumber);
+        });
       } else {
-        if (evt.which === 37) { // left arrow
-          self.navigateLeft();
-        } else if (evt.which === 39) { // rigt arrow
-          self.navigateRight();
-        } else if (evt.which === 32) { // space is increment current beat
-          evt.preventDefault();
-          self.insertSpace();
-        }
+        DrumPlayer.play(50);
       }
-      // todo:
-      // Shift + z is undo
-      // Shift + y is redo
-      // console.log(evt.which);
-    });
+    } else {
+      DrumPlayer.play(50);
+    }
+    this.incrementCurrentBeat();
+  },
+  navigateRightWithDrumSound: function(){
+    var index = this.getCurrentIndex();
+    var contents = this.getContents();
+    var content = contents[index];
+    if (content && Fraction.equal(content.startBeat, this.getCurrentBeat())) {
+      if (content.noteNumbers && content.noteNumbers.length > 0) {
+        // pass
+      } else {
+        DrumPlayer.play(50);
+      }
+    } else {
+      DrumPlayer.play(50);
+    }
+    this.incrementCurrentBeat();
   },
 
   destroy: function(){
-    // $(window).off('beatDown.Editor');
     $(window).off('noteDown.Editor');
-    $(window).off('keyDown.Editor');
   },
 
-  reset: function(){
-    this.setContents([]);
-    this.resetCreatedAt();
-    this.resetCurrentBeat();
-    this.setIncrementSize(Fraction.create(1));
+  reset: function(song){
+    if (!song) song = {};
+
+    this.setContents(song.contents || []);
+    this.setCreatedAt(song.createdAt || new Date);
+    this.setCurrentBeatSyncIndex(song.currentBeat || Fraction.create(0));
+    this.setIncrementSize(song.incrementSize || Fraction.create(1));
   },
 
   createSong: function(){
@@ -105,13 +115,14 @@ Editor = {
       createdAt: this.getCreatedAt(),
       contents: this.getContents(),
       currentBeat: this.getCurrentBeat(),
+      incrementSize: this.getIncrementSize(),
     };
   },
   getCreatedAt: function(){
     return this.createdAt.get();
   },
-  resetCreatedAt: function(){
-    this.createdAt.set(new Date);
+  setCreatedAt: function(arg){
+    this.createdAt.set(arg);
   },
   getName: function(){
     return this.name.get();
@@ -145,7 +156,6 @@ Editor = {
     };
 
     if (!content || !Fraction.equal(content.startBeat, currentBeat)){
-    
       contents.splice(index, 0, newContent);
     } else {
       contents.splice(index, 1, newContent);
@@ -168,7 +178,17 @@ Editor = {
       };
       contents.splice(index, 0, content);
     } else {
-      content.noteNumbers.push(noteNumber);
+      var repeated = false;
+      for (var i = 0; i < content.noteNumbers.length; i++) {
+        var n = content.noteNumbers[i];
+        if (n === noteNumber) {
+          repeated = true;
+          break;
+        }
+      }
+      if (!repeated) {
+        content.noteNumbers.push(noteNumber);
+      }
     }
 
     this.setContents(contents);
@@ -201,9 +221,6 @@ Editor = {
   getCurrentBeat: function(){
     return this.currentBeat.get();
   },
-  resetCurrentBeat: function(){
-    this.setCurrentBeatSyncIndex(Fraction.create(0));
-  },
   incrementCurrentBeat: function(){
     this.setCurrentBeatSyncIndex(Fraction.plus(this.getCurrentBeat(), this.getIncrementSize()));
   },
@@ -217,9 +234,14 @@ Editor = {
   setCurrentIndex: function(arg){
     this.currentIndex.set(arg);
   },
+  setCurrentIndexSyncBeat: function(index){
+    var contents = this.getContents();
+    this.setCurrentIndex(index);
+    this.setCurrentBeat(contents[index].startBeat);
+  },
 
   insertSpace: function(){
-    this.incrementCurrentBeat();
+    this.navigateRightWithDrumSound();
   },
 
   // setPastOperations: function(arg) {
@@ -348,4 +370,86 @@ Editor = {
   //   this.setContents(contents);
   //   this.setCurrentBeatSyncIndex(info.currentBeat);
   // },
+}
+
+PlayEditor = _.extend({}, Editor);
+
+PlayEditor.isStarted = new ReactiveVar;
+PlayEditor.getIsStarted = function(){
+  return this.isStarted.get();
+}
+PlayEditor.setIsStarted = function(arg){
+  return this.isStarted.set(arg);
+}
+
+PlayEditor.init = function(songId){
+  this.setSongId(songId);
+  this.reset(Songs.findOne(songId));
+  this.setCurrentBeatSyncIndex(Fraction.create(0));
+  this.setIsStarted(false);
+}
+
+PlayEditor.destroy = function(){
+
+}
+
+PlayEditor.start = function(){
+  if (!this.getIsStarted()) {
+    this.setIsStarted(true);
+    this.playAndSetPlay();
+  }
+}
+
+PlayEditor.stop = function(){
+  window.clearTimeout(this.timeout);
+  this.setIsStarted(false);
+}
+
+PlayEditor.playAndSetPlay = function(contents){
+  var contents = this.getContents();
+  var currentIndex = this.getCurrentIndex();
+  if (contents.length > currentIndex) {
+    var content = contents[currentIndex];
+    this.setCurrentBeat(content.startBeat); // todo: use incrementSize
+
+    var isEnd = false;
+    if (contents.length > currentIndex + 1) {
+      this.setCurrentIndex(currentIndex + 1);
+      var nextContent = contents[currentIndex + 1];
+      var numBeats = Fraction.toFloat(nextContent.startBeat) - Fraction.toFloat(content.startBeat);
+    } else {
+      isEnd = true;
+      var beatsPerMeasure = 4;
+      var measures = Fraction.toFloat(content.startBeat) / beatsPerMeasure;
+      var numBeats = (Math.ceil(measures) - measures) * beatsPerMeasure;
+      if (numBeats === 0) numBeats = beatsPerMeasure;
+    }
+
+    var tempo = 60000 / Metronome.getBeatsPerMinute();
+    // current sound
+    if (content.noteNumbers) {
+      content.noteNumbers.forEach(function(noteNumber){
+        PianoPlayer.play(noteNumber);
+      });
+    }
+    var start = Fraction.toFloat(content.startBeat);
+    var offset = Math.ceil(start) - start;
+    for (var i = 0; i < numBeats; i++) {
+      window.setTimeout(function(){
+        DrumPlayer.play(50);
+      }, (offset + i) * tempo);
+    }
+
+    // future sound
+    var time = numBeats * tempo;
+    var self = this;
+    this.timeout = window.setTimeout(function(){
+      if (isEnd) self.setCurrentBeatSyncIndex(Fraction.create(0));
+      self.playAndSetPlay();
+    }, time);
+  }
+}
+
+isInt = function(num){
+  return Math.ceil(num) - num === 0;
 }

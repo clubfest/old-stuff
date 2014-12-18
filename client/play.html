@@ -1,0 +1,12 @@
+<template name='play'>
+
+{{> metronome}}
+
+{{#if isStarted}}
+  <button id='stop'>stop</button>
+{{else}}
+  <button id='start'>start</button>
+{{/if}}
+
+{{> sheet}}
+</template>

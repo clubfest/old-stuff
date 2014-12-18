@@ -20,17 +20,13 @@ Keyboard = {
 
     $(window).off('keydown.keyboard');
     $(window).on('keydown.keyboard', function(evt) {
-      if (evt.shiftKey || evt.ctrlKey) return ;
+      if (evt.shiftKey || evt.ctrlKey /*|| evt.altKey*/) return ;
 
       var keyCode = fixKeyCode(evt.keyCode);
 
-      // 1: prevent backspace from navigating back in the browser
-      if (evt.which === 8) {
-        evt.preventDefault();
-      }
-
       // 2: prevent pressed keys from repeating
       if (downKeys[keyCode] === true) {
+        evt.preventDefault();
         return ;
       } else {
         downKeys[keyCode] = true;
@@ -39,6 +35,7 @@ Keyboard = {
       var noteNumber = convertKeyCodeToNote(keyCode);
 
       if (typeof noteNumber !== "undefined") {
+        evt.preventDefault();
         noteNumber = self.adjustShift(noteNumber);
         PianoPlayer.play(noteNumber);
         $(window).trigger('noteDown', {
