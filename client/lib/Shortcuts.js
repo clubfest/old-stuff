@@ -22,25 +22,25 @@ Shortcuts = {
   editorShortcuts: {
     8: {
       shift: function(){
-        Editor.deleteContent();
+        Shortcuts.editor.deleteContent();
       },
     },
     32: {
       normal: function(){
-        Editor.insertSpace();
+        Shortcuts.editor.insertSpace();
       },
       shift: function(){
-        Editor.insertRest();
+        Shortcuts.editor.insertRest();
       },
     },
     37: {
       normal: function(){
-        Editor.navigateLeft();
+        Shortcuts.editor.navigateLeft();
       },
     },
     39: {
       normal: function(){
-        Editor.navigateRightWithSound();
+        Shortcuts.editor.navigateRightWithSound();
       },
     },
     // todo:
@@ -72,7 +72,8 @@ Shortcuts = {
     });
   },
 
-  initEditor: function(){
+  initEditor: function(editor){
+    this.editor = editor;
     var self = this;
     $(window).off('keydown.editorShortcuts');
     $(window).on('keydown.editorShortcuts', function(evt){      

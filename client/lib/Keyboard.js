@@ -37,7 +37,7 @@ Keyboard = {
       if (typeof noteNumber !== "undefined") {
         evt.preventDefault();
         noteNumber = self.adjustShift(noteNumber);
-        PianoPlayer.play(noteNumber);
+        LoudPianoPlayer.play(noteNumber);
         $(window).trigger('noteDown', {
           noteNumber: noteNumber,
         });

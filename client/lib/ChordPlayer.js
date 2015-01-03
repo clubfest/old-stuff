@@ -64,6 +64,113 @@ PianoPlayer = {
   },
 }
 
+BassPlayer = {
+  increaseVolume: function(){
+    var res = this.getVolume();
+    this.setVolume(res + 0.1);
+  },
+  decreaseVolume: function(){
+    if (this.gainNode.gain.value > 0) {
+      var res = this.getVolume();
+      this.setVolume(res - 0.1);
+    }
+  },
+  getVolume: function(){
+    return this.gainNode.gain.value;
+  },
+  setVolume: function(arg){
+    this.gainNode.gain.value = arg;
+  },
+  init: function(){
+    this.sources = {};
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AudioContext();
+    this.gainNode = this.ctx.createGain();
+    // Connect the source to the gain node.
+    // Connect the gain node to the destination.
+    this.gainNode.connect(this.ctx.destination);
+    this.gainNode.gain.value = 1;
+
+    // caching the buffer
+    this.bufferDict = {};
+    var self = this;
+    _.range(21, 109).forEach(function(noteNumber) {
+      var key = MIDI.noteToKey[noteNumber];
+      var base64 = MIDI.Soundfont.mp3.acoustic_grand_piano[key].split(",")[1];
+      var buffer = Base64Binary.decodeArrayBuffer(base64);
+      self.ctx.decodeAudioData(buffer, function(buffer){
+        self.bufferDict[noteNumber] = buffer;
+      });
+    });      
+  },
+  play: function(noteNumber) {
+    var source = this.ctx.createBufferSource(); // creates a sound source
+    source.connect(this.gainNode);
+    var buffer = this.bufferDict[noteNumber];
+    if (buffer) {
+      source.buffer = buffer;
+      source.start(0);
+      this.sources[noteNumber] = source;
+    }
+  },
+  stop: function(noteNumber){
+    for (var n in this.sources){
+      source = this.sources[n];
+      source.stop();
+      delete this.sources[n];
+    }
+  }
+}
+
+LoudPianoPlayer = {
+  increaseVolume: function(){
+    var res = this.getVolume();
+    this.setVolume(res + 0.1);
+  },
+  decreaseVolume: function(){
+    if (this.gainNode.gain.value > 0) {
+      var res = this.getVolume();
+      this.setVolume(res - 0.1);
+    }
+  },
+  getVolume: function(){
+    return this.gainNode.gain.value;
+  },
+  setVolume: function(arg){
+    this.gainNode.gain.value = arg;
+  },
+  init: function(){
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AudioContext();
+    this.gainNode = this.ctx.createGain();
+    // Connect the source to the gain node.
+    // Connect the gain node to the destination.
+    this.gainNode.connect(this.ctx.destination);
+    this.gainNode.gain.value = 2.5;
+
+    // caching the buffer
+    this.bufferDict = {};
+    var self = this;
+    _.range(21, 109).forEach(function(noteNumber) {
+      var key = MIDI.noteToKey[noteNumber];
+      var base64 = MIDI.Soundfont.mp3.acoustic_grand_piano[key].split(",")[1];
+      var buffer = Base64Binary.decodeArrayBuffer(base64);
+      self.ctx.decodeAudioData(buffer, function(buffer){
+        self.bufferDict[noteNumber] = buffer;
+      });
+    });      
+  },
+  play: function(noteNumber) {
+    var source = this.ctx.createBufferSource(); // creates a sound source
+    source.connect(this.gainNode);
+    var buffer = this.bufferDict[noteNumber];
+    if (buffer) {
+      source.buffer = buffer;
+      source.start(0);
+    }
+  },
+}
+
 DrumPlayer = {
   increaseVolume: function(){
     var res = this.getVolume();
@@ -88,7 +195,7 @@ DrumPlayer = {
     // Connect the source to the gain node.
     // Connect the gain node to the destination.
     this.gainNode.connect(this.ctx.destination);
-    this.gainNode.gain.value = 1.5;
+    this.gainNode.gain.value = .7;
 
     // caching the buffer
     this.bufferDict = {};

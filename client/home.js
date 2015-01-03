@@ -6,8 +6,11 @@ Template.home.events({
 });
 
 Template.home.helpers({
+  isNotMobile: function(){
+    return !window.isMobile();
+  },
   songs: function(){
-    return Songs.find({});
+    return Songs.find({}, {sort: {createdAt: -1}});
   },
   prettyDate: function(date){
     if (!date || !date.getTime) return "";

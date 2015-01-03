@@ -4,8 +4,22 @@
 {{> metronome}}
 
 {{#each songs}}
-  <div>
-    <a href='/play/{{_id}}'>{{name}} - {{prettyDate createdAt}}</a>
-  </div>
+  <ul>
+    {{#if isNotMobile}}
+      <li>
+        <a href='/play/{{_id}}'>{{name}} - {{prettyDate createdAt}}</a>      
+      </li>
+      <li>
+        <a href='/edit/{{_id}}'>Harmony</a>      
+      </li>
+      <li>
+        <a href='/bassEdit/{{_id}}'>Bass</a>      
+      </li>
+    {{else}}
+      <li>
+        <a href='/mobilePlay/{{_id}}'>{{name}} - {{prettyDate createdAt}}</a>      
+      </li>
+    {{/if}}
+  </ul>
 {{/each}}
 </template>

@@ -1,6 +1,7 @@
 // replace chords with contents
 Editor = {
-  contents: new ReactiveVar,
+  harmonicContents: new ReactiveVar,
+  bassContents: new ReactiveVar,
   currentBeat: new ReactiveVar,
   currentIndex: new ReactiveVar,
   // currentChord: new ReactiveVar,
@@ -14,7 +15,7 @@ Editor = {
     this.setSongId(songId);
     this.reset(Songs.findOne(songId));
     this.handleNoteDown();
-    Shortcuts.initEditor();
+    Shortcuts.initEditor(this);
   },
 
   handleNoteDown: function(){
@@ -86,9 +87,10 @@ Editor = {
   reset: function(song){
     if (!song) song = {};
 
-    this.setContents(song.contents || []);
+    this.setHarmonicContents(song.harmonicContents || []);
+    this.setBassContents(song.bassContents || []);
     this.setCreatedAt(song.createdAt || new Date);
-    this.setCurrentBeatSyncIndex(song.currentBeat || Fraction.create(0));
+    this.setCurrentBeatSyncIndex(Fraction.create(0));
     this.setIncrementSize(song.incrementSize || Fraction.create(1));
   },
 
@@ -104,6 +106,8 @@ Editor = {
     Meteor.call('saveSong', this.getSongId(), this.getSong(), function(err){
       if (err){
         console.log(err.reason);
+      } else {
+        alert('Done');
       }
     });
   },
@@ -113,10 +117,24 @@ Editor = {
     return {
       name: this.getName(),
       createdAt: this.getCreatedAt(),
-      contents: this.getContents(),
+      harmonicContents: this.getHarmonicContents(),
       currentBeat: this.getCurrentBeat(),
       incrementSize: this.getIncrementSize(),
+      bassContents: this.getBassContents(),
     };
+  },
+
+  getHarmonicContents: function(){
+    return this.harmonicContents.get();
+  },
+  setHarmonicContents: function(arg){
+    this.harmonicContents.set(arg);
+  },
+  getBassContents: function(){
+    return this.bassContents.get();
+  },
+  setBassContents: function(arg){
+    this.bassContents.set(arg);
   },
   getCreatedAt: function(){
     return this.createdAt.get();
@@ -137,10 +155,10 @@ Editor = {
     this.songId = arg;
   },
   getContents: function(){
-    return this.contents.get();
+    return this.harmonicContents.get();
   },
   setContents: function(arg){
-    this.contents.set(arg);
+    this.harmonicContents.set(arg);
   },
   
   addRestToCurrentContent: function(){
@@ -243,134 +261,16 @@ Editor = {
   insertSpace: function(){
     this.navigateRightWithDrumSound();
   },
-
-  // setPastOperations: function(arg) {
-  //   this.pastOperations = arg;
-  // },
-  // getPastOperations: function(){
-  //   return this.pastOperations;
-  // },
-  // setPresentOperations: function(arg) {
-  //   this.presentOperations = arg;
-  // },
-  // getPresentOperations: function(){
-  //   return this.presentOperations;
-  // },
-  
-
-  // undo: function(){
-  //   var op = this.pastOperations.pop();
-  //   if (op) {
-  //     this.reverseOperation(op);
-  //   }
-  // },
-  // redo: function(){
-  //   var op = this.presentOperations.pop();
-  //   if (op){
-  //     this.applyOperation(op);
-  //   }
-  // },
-
-  // reverseOperation: function(op){
-  //   switch (op.name) {
-  //     case "insert":
-  //       this.applyUninsert(op.info);
-  //       break;
-  //     case "insertSpace":
-  //       this.decrementCurrentBeat();
-  //       break;
-  //     case "zoom":
-  //       this.applyUnzoom(op.info);
-  //       break;
-  //     case "lowerPitch":
-  //       this.higherPitch();
-  //       break;
-  //     case "higherPitch":
-  //       this.lowerPitch();
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  //   this.presentOperations.push(op);
-  // },
-
-  // applyOperation: function(op){
-  //   switch (op.name) {
-  //     case "insert":
-  //       this.applyInsert(op.info);
-  //       break;
-  //     case "insertSpace":
-  //       this.incrementCurrentBeat();
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  //   this.pastOperations.push(op);
-  // },
-
-  // insertSpace: function(){
-  //   this.applyOperation(this.createInsertSpaceOp());
-  // },
-
-  // createInsertSpaceOp: function(){
-  //   this.presentOperations = []; // prevent redo after new operation
-  //   return {
-  //     name: 'insertSpace',
-  //     info: {},
-  //   }
-  // },
-
-
-  // // remove present operations when we create new things
-  // createInsertOp: function(newContent){
-  //   var contents = this.getContents();
-  //   var currentBeat = this.getCurrentBeat();
-  //   var currentIndex = this.getCurrentIndex();
-  //   var oldContent = null;
-  //   if (currentIndex < contents.length) {
-  //     oldContent = contents[currentIndex];
-  //     if (!Fraction.equal(oldContent.startBeat, currentBeat)){
-  //       oldContent = null;
-  //     }
-  //   }
-
-  //   this.presentOperations = []; // prevent redo after new operation
-  //   newContent.startBeat = currentBeat; // annotate
-
-  //   return {
-  //     name: 'insert',
-  //     info: {
-  //       content: newContent,
-  //       oldContent: oldContent,
-  //       currentIndex: currentIndex,
-  //       currentBeat: currentBeat,
-  //     } 
-  //   };
-  // },
-
-  // applyInsert: function(info){
-  //   this.setCurrentBeat(info.currentBeat);
-  //   var contents = this.getContents();
-  //   if (info.oldContent) {
-  //     contents.splice(info.currentIndex, 1, info.content);
-  //   } else {
-  //     contents.splice(info.currentIndex, 0, info.content);
-  //   }
-  //   this.setContents(contents);
-  //   this.incrementCurrentBeat();
-  // },
-
-  // applyUninsert: function(info){
-  //   var contents = this.getContents();
-  //   if (info.oldContent) {
-  //     contents.splice(info.currentIndex, 1, info.oldContent);
-  //   } else {
-  //     contents.splice(info.currentIndex, 1);
-  //   }
-  //   this.setContents(contents);
-  //   this.setCurrentBeatSyncIndex(info.currentBeat);
-  // },
 }
+
+BassEditor = _.extend({}, Editor);
+BassEditor.getContents = function(){
+  return this.bassContents.get();
+}
+BassEditor.setContents = function(arg){
+  return this.bassContents.set(arg);
+}
+
 
 PlayEditor = _.extend({}, Editor);
 
@@ -393,9 +293,46 @@ PlayEditor.destroy = function(){
 
 }
 
+PlayEditor.bassIndex = new ReactiveVar;
+PlayEditor.setBassIndex = function(arg){
+  this.bassIndex.set(arg);
+}
+PlayEditor.getBassIndex = function(){
+  return this.bassIndex.get();
+}
+PlayEditor.setCurrentBeatSyncIndex = function(arg){
+  this.setCurrentBeat(arg);
+  // todo: optimize
+  var beat = this.getCurrentBeat();
+
+  var contents = this.getHarmonicContents(); 
+  var index = contents.length;
+  for (var i = 0; i < contents.length; i++) {
+    var content = contents[i];
+    if (Fraction.gte(content.startBeat, beat)) {
+      index = i;
+      break;
+    }
+  }
+  this.setCurrentIndex(index);
+
+  contents = this.getBassContents(); 
+  index = contents.length;
+  for (var i = 0; i < contents.length; i++) {
+    var content = contents[i];
+    if (Fraction.gte(content.startBeat, beat)) {
+      index = i;
+      break;
+    }
+  }
+  this.setBassIndex(index);
+}
+
 PlayEditor.start = function(){
   if (!this.getIsStarted()) {
     this.setIsStarted(true);
+    this.isHarmonicEnd = false;
+    this.isBassEnd = false;
     this.playAndSetPlay();
   }
 }
@@ -406,48 +343,79 @@ PlayEditor.stop = function(){
 }
 
 PlayEditor.playAndSetPlay = function(contents){
-  var contents = this.getContents();
+  var contents = this.getHarmonicContents();
   var currentIndex = this.getCurrentIndex();
-  if (contents.length > currentIndex) {
-    var content = contents[currentIndex];
-    this.setCurrentBeat(content.startBeat); // todo: use incrementSize
+  
+  var currentTime = Fraction.toFloat(this.getCurrentBeat());
+  var tempo = 60000 / Metronome.getBeatsPerMinute();
 
-    var isEnd = false;
-    if (contents.length > currentIndex + 1) {
-      this.setCurrentIndex(currentIndex + 1);
-      var nextContent = contents[currentIndex + 1];
-      var numBeats = Fraction.toFloat(nextContent.startBeat) - Fraction.toFloat(content.startBeat);
+  for (var i = currentIndex; ; i++) {
+    if (i < contents.length) {
+      var content = contents[i];
+      var time = Fraction.toFloat(content.startBeat);
+      if (currentTime <= time && time < currentTime + 1) {
+        var delay = (time - currentTime) * tempo;
+        window.setTimeout(function(content){
+          if (content.noteNumbers) {
+            content.noteNumbers.forEach(function(noteNumber){
+              PianoPlayer.play(noteNumber);
+            });
+          }
+        }, delay, content);
+      } else {
+        this.setCurrentIndex(i);
+        break ;
+      }
     } else {
-      isEnd = true;
-      var beatsPerMeasure = 4;
-      var measures = Fraction.toFloat(content.startBeat) / beatsPerMeasure;
-      var numBeats = (Math.ceil(measures) - measures) * beatsPerMeasure;
-      if (numBeats === 0) numBeats = beatsPerMeasure;
+      this.isHarmonicEnd = true;
+      break;
     }
-
-    var tempo = 60000 / Metronome.getBeatsPerMinute();
-    // current sound
-    if (content.noteNumbers) {
-      content.noteNumbers.forEach(function(noteNumber){
-        PianoPlayer.play(noteNumber);
-      });
-    }
-    var start = Fraction.toFloat(content.startBeat);
-    var offset = Math.ceil(start) - start;
-    for (var i = 0; i < numBeats; i++) {
-      window.setTimeout(function(){
-        DrumPlayer.play(50);
-      }, (offset + i) * tempo);
-    }
-
-    // future sound
-    var time = numBeats * tempo;
-    var self = this;
-    this.timeout = window.setTimeout(function(){
-      if (isEnd) self.setCurrentBeatSyncIndex(Fraction.create(0));
-      self.playAndSetPlay();
-    }, time);
   }
+
+  contents = this.getBassContents();
+  currentIndex = this.getBassIndex();
+
+  for (var i = currentIndex; ; i++) {
+    if (i < contents.length) {
+      var content = contents[i];
+      var time = Fraction.toFloat(content.startBeat);
+      if (currentTime <= time && time < currentTime + 1) {
+        var delay = (time - currentTime) * tempo;
+        window.setTimeout(function(content){
+          if (content.noteNumbers) {
+            BassPlayer.stop();
+            content.noteNumbers.forEach(function(noteNumber){
+              BassPlayer.play(noteNumber);
+            });
+          }
+        }, delay, content);
+      } else {
+        this.setBassIndex(i);
+        break ;
+      }
+    } else {
+      this.isBassEnd = true;
+      break;
+    }
+  }
+
+  DrumPlayer.play(50);
+
+  // future sound
+  var delay = 1 * tempo;
+  var self = this;
+
+  this.timeout = window.setTimeout(function(){
+    if (self.isHarmonicEnd && self.isBassEnd) {
+      self.setCurrentBeatSyncIndex(Fraction.create(0));
+      self.isHarmonicEnd = false;
+      self.isBassEnd = false;
+    } else {
+      self.setCurrentBeat(Fraction.create(currentTime + 1));
+      // self.setCurrentBeatSyncIndex(Fraction.create(currentTime + 1));
+    }
+    self.playAndSetPlay();
+  }, delay);
 }
 
 isInt = function(num){

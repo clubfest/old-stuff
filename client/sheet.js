@@ -1,7 +1,6 @@
 
 Template.sheet.rendered = function(){
-  console.log(this)
-  SheetDrawer.init();
+  SheetDrawer.init(Editor);
 }
 
 Template.sheet.destroyed = function(){

@@ -17,7 +17,7 @@ Template.edit.helpers({
     }
   },
   chords: function(){
-    return Editor.getContents();
+    return Editor.getHarmonicContents();
   },
   name: function(){
     return Editor.getName();

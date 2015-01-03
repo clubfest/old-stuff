@@ -5,7 +5,7 @@ Metronome = {
   isStarted: new ReactiveVar,
   swing: new ReactiveVar,
   init: function(){
-    this.setBeatsPerMinute(60);
+    this.setBeatsPerMinute(90);
     this.setBeatsPerMeasure(4);
     this.getIsStarted(false);
   },
