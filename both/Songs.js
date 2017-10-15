@@ -13,4 +13,7 @@ Meteor.methods({
       $set: song,
     });
   },
+  deleteSong: function(songId){
+    Songs.remove(songId);
+  },
 })

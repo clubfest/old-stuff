@@ -28,6 +28,9 @@ Template.edit.events({
   'click #save': function(){
     Editor.save();
   },
+  'click #delete': function(){
+    Editor.delete();
+  },
   'click #set-name': function(){
     var name = prompt('Title');
     if (name) {

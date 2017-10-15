@@ -98,16 +98,26 @@ Editor = {
     this.reset();
     Meteor.call('createSong', this.getSong(), function(err){
       if (err) {
-        console.log(err.reason);
+        alert(err.reason);
       }
     });
   },
   save: function(){
     Meteor.call('saveSong', this.getSongId(), this.getSong(), function(err){
       if (err){
-        console.log(err.reason);
+        alert(err.reason);
       } else {
-        alert('Done');
+        // TODO refactored navigation out of this library 
+        window.location.href = '/'
+      }
+    });
+  },
+  delete: function(){
+    Meteor.call('deleteSong', this.getSongId(), function(err){
+      if (err){
+        alert(err.reason);
+      } else {
+        window.location.href = '/'
       }
     });
   },
